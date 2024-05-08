@@ -1,53 +1,71 @@
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"math/rand"
+	"os"
+	"strings"
 
-    "github.com/charmbracelet/bubbles/textarea"
-    "github.com/charmbracelet/bubbles/viewport"
-    tea "github.com/charmbracelet/bubbletea"
-    "github.com/charmbracelet/lipgloss"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
-func initModel() model {
-    ta := textarea.New()
-    ta.Placeholder = "Foobar"
-    ta.Prompt = "┃ "
-    ta.Focus()
-    
-    // Remove cursor line styling
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+var sentences = []string{
+    "Mary had a little lamb. Little lamb. Little lamb.",
+    "The quick brown fox jumped over the lazy dog.",
+    "This is an example sentence",
+}
 
-    return model{textarea: ta}
+var remainingSentenceStyle = lipgloss.NewStyle().Faint(true)
+var correctStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575"))
+var inCorrectStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
+var cursorStyle = lipgloss.NewStyle().Background(lipgloss.Color("#555555"))
+
+func initModel() model {
+    sentence := sentences[rand.Intn(len(sentences))]
+    answers := make([]lipgloss.Style, len(sentence))
+    for i := range answers {
+        answers[i] = remainingSentenceStyle
+    }
+    return model{
+        sentence: sentence,
+        answers: answers,
+    }
 }
 
 type model struct {
-    viewport viewport.Model
-    messages []string
-    textarea textarea.Model
+    sentence string
+    answers []lipgloss.Style
+    cursor int
 }
 
 func (m model) Init() tea.Cmd {
-    return textarea.Blink
+    return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    var taCmd tea.Cmd
-    m.textarea, taCmd = m.textarea.Update(msg)
 
     switch msg := msg.(type){
     case tea.KeyMsg:
         switch msg.String(){
-        case "q":
+        case "ctrl+c":
             return m, tea.Quit
+        case "backspace":
+            if m.cursor > 0 {
+                m.cursor--
+            }
         }
+
     }
-    return m, tea.Batch(taCmd)
+    return m, nil // tea.Batch(taCmd)
 }
 
 func (m model) View() string {
-    return m.textarea.View()
+    var s strings.Builder
+    for i, renderer := range m.answers {
+        s.WriteString(renderer.Render(string(m.sentence[i])))
+    }
+    return s.String()
 }
 
 func main() {
