@@ -24,7 +24,7 @@ type Model struct {
     sentence string
     userInput []lipgloss.Style
     cursor int
-    done bool
+    Done bool
 }
 
 func (m *Model) progressCursor(letter byte) {
@@ -37,7 +37,7 @@ func (m *Model) progressCursor(letter byte) {
         m.cursor++
         m.userInput[m.cursor] = cursorStyle 
     } else {
-        m.done = true
+        m.Done = true
     }
 }
 
@@ -50,7 +50,7 @@ func (m *Model) decrementCursor() {
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-    if m.done {
+    if m.Done {
         return m, nil
     }
     switch msg := msg.(type){

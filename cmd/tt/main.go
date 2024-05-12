@@ -10,12 +10,12 @@ import (
 )
 
 var welcomeMessage = "Hello! Welcome to the typing test challenge! When you're ready, press <enter> to begin"
+var finishedMessage = "Test finished! Press <enter> to go again"   
 
 type model struct {
     test textTest.Model
     startPage bool
 }
-
 
 func (m model) Init() tea.Cmd {
     return nil
@@ -35,6 +35,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         }
         return m, nil
     }
+    if m.test.Done {
+        if val, ok := msg.(tea.KeyMsg); ok {
+            if val.Type == tea.KeyEnter {
+                m.test = textTest.NewModel()
+            }
+        }
+        return m, nil
+    }   
 
     test, cmd := m.test.Update(msg)
     m.test = test
@@ -46,8 +54,11 @@ func (m model) View() string {
     if m.startPage {
         return welcomeMessage
     }
+    if m.test.Done {
+        return finishedMessage
+    }
     return m.test.View()
-}
+} 
 
 func main() {
     m := model{
