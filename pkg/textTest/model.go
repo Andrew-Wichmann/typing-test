@@ -24,6 +24,7 @@ type Model struct {
     sentence string
     userInput []lipgloss.Style
     cursor int
+    done bool
 }
 
 func (m *Model) progressCursor(letter byte) {
@@ -35,6 +36,8 @@ func (m *Model) progressCursor(letter byte) {
     if m.cursor < len(m.sentence)-1 {
         m.cursor++
         m.userInput[m.cursor] = cursorStyle 
+    } else {
+        m.done = true
     }
 }
 
@@ -46,7 +49,10 @@ func (m *Model) decrementCursor() {
     }
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+    if m.done {
+        return m, nil
+    }
     switch msg := msg.(type){
     case tea.KeyMsg:
         switch msg.Type{
@@ -58,13 +64,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             m.progressCursor(byte(' '))
         case tea.KeyBackspace:
             m.decrementCursor()
-        case tea.KeyCtrlC:
-            return m, tea.Quit
-        }
+       }
     }
 
 
-    return m, nil // tea.Batch(taCmd)
+    return m, nil
 }
 
 
@@ -74,10 +78,6 @@ func (m Model) View() string {
         s.WriteString(renderer.Render(string(m.sentence[i])))
     }
     return s.String()
-}
-
-func (m Model) Init() tea.Cmd {
-    return nil
 }
 
 func NewModel() Model {

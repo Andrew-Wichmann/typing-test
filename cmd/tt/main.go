@@ -9,8 +9,11 @@ import (
     "github.com/Andrew-Wichmann/typing-test/pkg/textTest"
 )
 
+var welcomeMessage = "Hello! Welcome to the typing test challenge! When you're ready, press <enter> to begin"
+
 type model struct {
     test textTest.Model
+    startPage bool
 }
 
 
@@ -19,16 +22,37 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    return m.test.Update(msg)
+    if val, ok := msg.(tea.KeyMsg); ok {
+        if val.Type == tea.KeyCtrlC {
+            return m, tea.Quit
+        }
+    }
+    if m.startPage {
+        if val, ok := msg.(tea.KeyMsg); ok {
+            if val.Type == tea.KeyEnter {
+                m.startPage = false
+            }
+        }
+        return m, nil
+    }
+
+    test, cmd := m.test.Update(msg)
+    m.test = test
+
+    return m, cmd
 }
 
 func (m model) View() string {
+    if m.startPage {
+        return welcomeMessage
+    }
     return m.test.View()
 }
 
 func main() {
     m := model{
         test: textTest.NewModel(),
+        startPage: true,
     }
     _, err := tea.NewProgram(m).Run()
     if err != nil {
