@@ -59,7 +59,7 @@ func (m *model) decrementCursor() {
         m.userInput[m.cursor] = cursorStyle
     }
 }
-    
+
 
 func (m model) Init() tea.Cmd {
     return nil
@@ -69,16 +69,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     switch msg := msg.(type){
     case tea.KeyMsg:
         switch msg.Type{
-            case tea.KeyRunes:
-                if len(msg.Runes) == 1 {
-                    m.progressCursor(byte(msg.Runes[0]))
-                }
-            case tea.KeySpace:
-                m.progressCursor(byte(' '))
-            case tea.KeyBackspace:
-                m.decrementCursor()
-           case tea.KeyCtrlC:
-                return m, tea.Quit
+        case tea.KeyRunes:
+            if len(msg.Runes) == 1 {
+                m.progressCursor(byte(msg.Runes[0]))
+            }
+        case tea.KeySpace:
+            m.progressCursor(byte(' '))
+        case tea.KeyBackspace:
+            m.decrementCursor()
+        case tea.KeyCtrlC:
+            return m, tea.Quit
         }
     }
 
