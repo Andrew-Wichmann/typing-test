@@ -17,52 +17,78 @@ var sentences = []string{
 }
 
 var remainingSentenceStyle = lipgloss.NewStyle().Faint(true)
-var correctStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575"))
-var inCorrectStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000"))
+var correctStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04b513")).Background(lipgloss.Color("#a8f0ae"))
+var inCorrectStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f72f43")).Background(lipgloss.Color("#fa8c97"))
 var cursorStyle = lipgloss.NewStyle().Background(lipgloss.Color("#555555"))
 
 func initModel() model {
     sentence := sentences[rand.Intn(len(sentences))]
-    answers := make([]lipgloss.Style, len(sentence))
-    for i := range answers {
-        answers[i] = remainingSentenceStyle
+    userInput := make([]lipgloss.Style, len(sentence))
+    userInput[0] = cursorStyle
+    for i := range userInput[1:] {
+        userInput[i+1] = remainingSentenceStyle
     }
     return model{
         sentence: sentence,
-        answers: answers,
+        userInput: userInput,
     }
 }
 
 type model struct {
     sentence string
-    answers []lipgloss.Style
+    userInput []lipgloss.Style
     cursor int
 }
+
+func (m *model) progressCursor(letter byte) {
+    if letter == m.sentence[m.cursor]{
+        m.userInput[m.cursor] = correctStyle
+    } else {
+        m.userInput[m.cursor] = inCorrectStyle
+    }
+    if m.cursor < len(m.sentence)-1 {
+        m.cursor++
+        m.userInput[m.cursor] = cursorStyle 
+    }
+}
+
+func (m *model) decrementCursor() {
+    if m.cursor > 0 {
+        m.userInput[m.cursor] = remainingSentenceStyle
+        m.cursor--
+        m.userInput[m.cursor] = cursorStyle
+    }
+}
+    
 
 func (m model) Init() tea.Cmd {
     return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
     switch msg := msg.(type){
     case tea.KeyMsg:
-        switch msg.String(){
-        case "ctrl+c":
-            return m, tea.Quit
-        case "backspace":
-            if m.cursor > 0 {
-                m.cursor--
-            }
+        switch msg.Type{
+            case tea.KeyRunes:
+                if len(msg.Runes) == 1 {
+                    m.progressCursor(byte(msg.Runes[0]))
+                }
+            case tea.KeySpace:
+                m.progressCursor(byte(' '))
+            case tea.KeyBackspace:
+                m.decrementCursor()
+           case tea.KeyCtrlC:
+                return m, tea.Quit
         }
-
     }
+
+
     return m, nil // tea.Batch(taCmd)
 }
 
 func (m model) View() string {
     var s strings.Builder
-    for i, renderer := range m.answers {
+    for i, renderer := range m.userInput {
         s.WriteString(renderer.Render(string(m.sentence[i])))
     }
     return s.String()
