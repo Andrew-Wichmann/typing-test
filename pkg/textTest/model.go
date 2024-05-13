@@ -15,10 +15,13 @@ var sentences = []string{
     "This is an example sentence",
 }
 
-var remainingSentenceStyle = lipgloss.NewStyle().Faint(true)
-var correctStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04b513")).Background(lipgloss.Color("#a8f0ae"))
-var inCorrectStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#f72f43")).Background(lipgloss.Color("#fa8c97"))
-var cursorStyle = lipgloss.NewStyle().Background(lipgloss.Color("#555555"))
+var windowStyle = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).Align(lipgloss.Center, lipgloss.Center)
+
+var baseStyle = lipgloss.NewStyle()
+var remainingSentenceStyle = lipgloss.NewStyle().Inherit(baseStyle).Faint(true)
+var correctStyle = lipgloss.NewStyle().Inherit(baseStyle).Foreground(lipgloss.Color("#04b513")).Background(lipgloss.Color("#a8f0ae"))
+var inCorrectStyle = lipgloss.NewStyle().Inherit(baseStyle).Foreground(lipgloss.Color("#f72f43")).Background(lipgloss.Color("#fa8c97")).Strikethrough(true)
+var cursorStyle = lipgloss.NewStyle().Inherit(baseStyle).Background(lipgloss.Color("#555555")).Blink(true)
 
 type Model struct {
     sentence string
@@ -65,19 +68,18 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
         case tea.KeyBackspace:
             m.decrementCursor()
        }
+    case tea.WindowSizeMsg:
+        windowStyle.Width(msg.Width).Height(msg.Height-2)
     }
-
-
     return m, nil
 }
-
 
 func (m Model) View() string {
     var s strings.Builder
     for i, renderer := range m.userInput {
         s.WriteString(renderer.Render(string(m.sentence[i])))
     }
-    return s.String()
+    return windowStyle.Render(s.String())
 }
 
 func NewModel() Model {

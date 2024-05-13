@@ -31,9 +31,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
         if val, ok := msg.(tea.KeyMsg); ok {
             if val.Type == tea.KeyEnter {
                 m.startPage = false
+                return m, tea.EnterAltScreen
             }
         }
-        return m, nil
     }
     if m.test.Done {
         if val, ok := msg.(tea.KeyMsg); ok {
